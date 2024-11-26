@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度學習程式碼報告</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 基本樣式設定 */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            background-color: #0066cc;
+            color: #fff;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+        }
+
+        .github-link {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .github-link a {
+            text-decoration: none;
+            color: #0066cc;
+            font-size: 1.2em;
+            border: 2px solid #0066cc;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .github-link a:hover {
+            background-color: #0066cc;
+            color: #fff;
+        }
+
+        .code-container {
+            margin: 20px auto;
+            width: 80%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-button {
+            background-color: #0066cc;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-button:hover {
+            background-color: #005bb5;
+        }
+
+        .code-section {
+            margin-top: 10px;
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .code-section.hidden {
+            display: none;
+        }
+
+        .code-description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+
+        #results {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .result-image {
+            max-width: 80%;
+            height: auto;
+            border: 2px solid #0066cc;
+            border-radius: 10px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333;
+            color: #fff;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>深度學習程式碼報告</h1>
+        <p>展示深度學習專案和風格轉換的實現過程</p>
+    </header>
+    <main>
+        <!-- GitHub Link Section -->
+        <section class="github-link">
+            <h2>我的 GitHub 小專案</h2>
+            <a href="https://github.com/AnthonyChenIV/ML-test" target="_blank">
+                <i class="fab fa-github"></i> 查看我的 GitHub 小專案
+            </a>
+        </section>
+
+        <!-- Code Section -->
+        <section id="code">
+            <h2>程式碼展示</h2>
+            <div class="code-container">
+                <button class="toggle-button">匯入必要套件</button>
+                <div class="code-section hidden">
+                    <pre><code>
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from PIL import Image
+import matplotlib.pyplot as plt
+import torchvision.transforms as transforms
+import torchvision.models as models
+
+import copy
+import os
+                    </code></pre>
+                    <p class="code-description">這部分程式碼用於匯入必要的深度學習框架、圖像處理和模型相關套件。</p>
+                </div>
+            </div>
+
+            <div class="code-container">
+                <button class="toggle-button">初始化設備與載入圖像</button>
+                <div class="code-section hidden">
+                    <pre><code>
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+imsize = 512 if torch.cuda.is_available() else 128
+
+loader = transforms.Compose([
+    transforms.Resize(imsize),
+    transforms.ToTensor()
+])
+
+def image_loader(image_name):
+    image = Image.open(image_name)
+    image = loader(image).unsqueeze(0)
+    return image.to(device, torch.float)
+                    </code></pre>
+                    <p class="code-description">這部分程式碼初始化設備（CPU或GPU），設定圖像處理方式，並定義載入函數。</p>
+                </div>
+            </div>
+
+            <div class="code-container">
+                <button class="toggle-button">模型與損失函數</button>
+                <div class="code-section hidden">
+                    <pre><code>
+class ContentLoss(nn.Module):
+    def __init__(self, target):
+        super(ContentLoss, self).__init__()
+        self.target = target.detach()
+
+    def forward(self, input):
+        self.loss = F.mse_loss(input, self.target)
+        return input
+
+class StyleLoss(nn.Module):
+    def __init__(self, target_feature):
+        super(StyleLoss, self).__init__()
+        self.target = gram_matrix(target_feature).detach()
+
+    def forward(self, input):
+        G = gram_matrix(input)
+        self.loss = F.mse_loss(G, self.target)
+        return input
+                    </code></pre>
+                    <p class="code-description">定義內容損失和風格損失，用於訓練生成風格化的圖片。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results">
+            <h2>結果展示</h2>
+            <p>以下是風格轉換結果：</p>
+            <img src="C:\Users\chenl\Desktop\深度學習成果20241104\styled_WIN_20241104_01_28_52_Pro.png" alt="結果圖片" class="result-image">
+        </section>
+    </main>
+    <footer>
+        <p>© 2024 by Anthony Chen</p>
+    </footer>
+    <script>
+        // JavaScript: 控制程式碼顯示與隱藏
+        document.querySelectorAll('.toggle-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const codeSection = button.nextElementSibling;
+                if (codeSection.classList.contains('hidden')) {
+                    codeSection.classList.remove('hidden');
+                    button.textContent = '隱藏程式碼';
+                } else {
+                    codeSection.classList.add('hidden');
+                    button.textContent = '顯示程式碼';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
